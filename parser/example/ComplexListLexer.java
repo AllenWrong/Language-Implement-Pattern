@@ -1,38 +1,34 @@
-package Lexer.example;
+package parser.example;
 
-import Lexer.Lexer;
-import Lexer.Token;
-import Lexer.TokenInfo;
+import Lexer.*;
 
 /**
  * grammar NestedNameList:
  * list     : '[' elements ']';
- * elements : element (, element)*;
- * element  : NAME | list;
+ * elements : element (',' element)*;
+ * element  : NAME '=' NAME
+ *          | NAME
+ *          | list;
  * NAME     : ('a'..'z'|'A'..'Z')+;
  *
  */
-public class ListLexer extends Lexer {
+public class ComplexListLexer extends Lexer {
 
-    public ListLexer(String input) {
+    public ComplexListLexer(String input) {
         super(input);
     }
 
     public boolean isLetter() {
-        return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+        return 'z' >= c && 'a' <= c || 'A' <= c && 'Z' >= c;
     }
 
-    /**
-     * 解析Name
-     * NAME     : ('a'..'z'|'A'..'Z')+;
-     * @return token
-     */
     public Token NAME() {
         StringBuilder builder = new StringBuilder();
         do {
             builder.append(c);
             consume();
-        } while(isLetter());
+        } while (isLetter());
+
         return new Token(TokenInfo.NAME, builder.toString());
     }
 
@@ -51,29 +47,34 @@ public class ListLexer extends Lexer {
         while (c != EOF) {
             switch (c) {
                 case ' ': case '\t': case '\n': case '\r':
-                    WS(); continue;
-                case ',':
-                    consume();
-                    return new Token(TokenInfo.COMMA, ",");
+                    WS();
+                    break;
                 case '[':
                     consume();
                     return new Token(TokenInfo.LBRACK, "[");
                 case ']':
                     consume();
                     return new Token(TokenInfo.RBRACK, "]");
+                case ',':
+                    consume();
+                    return new Token(TokenInfo.COMMA, ",");
+                case '=':
+                    consume();
+                    return new Token(TokenInfo.EQUAL, "=");
                 default:
                     if (isLetter()) {
                         return NAME();
                     } else {
-                        throw new RuntimeException("invalid character '"+ c +"'");
+                        throw new RuntimeException("Expected letter but not!");
                     }
+
             }
         }
-        return new Token(EOF_TYPE, "<EOF>");
+        return new Token(TokenInfo.EOF, "<EOF>");
     }
 
     @Override
     public String getTokenName(int tokenType) {
-        return TokenInfo.tokenNames[tokenType];
+        return null;
     }
 }
